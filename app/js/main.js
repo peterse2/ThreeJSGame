@@ -63,7 +63,7 @@ function init() {
     //treeCF.multiply(new THREE.Matrix4().makeRotationX(1.5));
     //treeCF.multiply(new THREE.Matrix4().makeTranslation(-1000,0,10000));
     const lightOne = new THREE.DirectionalLight(0xFFFFFF);
-    lightOne.position.set(0,0,-1).normalize();
+    lightOne.position.set(0,1,-1).normalize();
     scene.add(lightOne);
 
 
@@ -76,8 +76,19 @@ function init() {
     groundTex.wrapT = THREE.RepeatWrapping;
     const groundMat = new THREE.MeshPhongMaterial({ map: groundTex});
 
-    const groundGeo = new THREE.BoxGeometry(1000,10,10000, 10,10,10);
+    const groundGeo = new THREE.BoxGeometry(3000,10,10000, 10,10,10);
     const ground = new THREE.Mesh (groundGeo, groundMat);
+    ground.position = new THREE.Vector3(0,1000,-1000);
+    let groundCF = new THREE.Matrix4();
+    groundCF.multiply(new THREE.Matrix4().makeTranslation(0,-250,5000));
+    var groundTrans = new THREE.Vector3();
+    var groundRot = new THREE.Quaternion();
+    var groundScale = new THREE.Vector3();
+
+    groundCF.decompose(groundTrans, groundRot, groundScale);
+    ground.position.copy(groundTrans);
+    ground.quaternion.copy(groundRot);
+    ground.scale.copy(groundScale);
     scene.add(ground);
 
     renderer = new THREE.WebGLRenderer();
