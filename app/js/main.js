@@ -2,16 +2,23 @@ var scene, camera, renderer;
 var geometry, material;
 var treeCF, treeTrans, treeScale, treeRot;
 var groundTrans, groundRot, groundScale;
+var boardTrans, boardRot, boardScale;
+var daggerTrans, daggerRot, daggerScale;
 var mouse = [.5, .5];
-var objects = {};
 var phi = 0, theta = 0;
 var target = new THREE.Vector3();
 var trees = [];
 var treesCF = [];
 var grounds = [];
 var groundsCF = [];
+var boards = [];
+var boardsCF = [];
+var dagger;
+var daggerCF;
+
 const TREESPEED = -25;
 const NUMTREES = 20;
+var NUMBOARDS = 4;
 
 target.x = 10 * Math.sin( phi ) * Math.cos( theta );
 target.y = 10 * Math.cos( phi );
@@ -23,12 +30,14 @@ function init() {
     scene = new THREE.Scene();
     window.addEventListener('resize', onResize, false);
     window.addEventListener('keydown', onKeypress, false);
+    window.addEventListener( 'mousedown', onDocumentMouseDown, false );
+    window.addEventListener( 'mousemove', onMouseMove, false );
     const globalAxes = new THREE.AxisHelper(200);
     scene.add(globalAxes);
     camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
     camera.position = new THREE.Vector3(0, 0, 0);
     camera.target = target;
-    window.addEventListener( 'mousemove', onMouseMove, false );
+
     for(i = 0; i < NUMTREES; i++) {
         let temp = new Tree();
         trees.push(temp);
@@ -55,10 +64,9 @@ function init() {
     groundTex.wrapT = THREE.RepeatWrapping;
     const groundMat = new THREE.MeshPhongMaterial({ map: groundTex});
 
-    const groundGeo = new THREE.BoxGeometry(3000,10,10000, 10,10,10);
+    const groundGeo = new THREE.BoxGeometry(5000,10,10000, 10,10,10);
     for(i = 0; i < 3; i++) {
         var ground = new THREE.Mesh (groundGeo, groundMat);
-        //ground.position = new THREE.Vector3(0,1000,-1000*i);
         let groundCF = new THREE.Matrix4();
         groundCF.multiply(new THREE.Matrix4().makeTranslation(0,-300,10000*i));
         grounds.push(ground);
@@ -68,6 +76,27 @@ function init() {
     groundTrans = new THREE.Vector3();
     groundRot = new THREE.Quaternion();
     groundScale = new THREE.Vector3();
+
+    boardTrans = new THREE.Vector3();
+    boardRot = new THREE.Quaternion();
+    boardScale = new THREE.Vector3();
+
+    daggerTrans = new THREE.Vector3();
+    daggerRot = new THREE.Quaternion();
+    daggerScale = new THREE.Vector3();
+
+    for(i = 0; i < NUMBOARDS; i++) {
+        var board = new Target();
+        let t = Math.floor(Math.random() * (500 - 250) + 250);
+        if (i%2 == 0) {
+            t = t*-1;
+        }
+        let boardCF = new THREE.Matrix4();
+        boardCF.multiply(new THREE.Matrix4().makeTranslation(t,0,3333*(i+1)));
+        boards.push(board);
+        boardsCF.push(boardCF);
+        scene.add(board);
+    }
 
     renderer = new THREE.WebGLRenderer();
     renderer.setSize( window.innerWidth, window.innerHeight );
@@ -84,12 +113,12 @@ function animate() {
     camera.lookAt( camera.target );
 
     for(i = 0; i<NUMTREES; i++) {
+        let t = Math.floor(Math.random() * (1000 - 500)+ 500);
+        if (i % 2 == 0) {
+            t = t * -1;
+        }
         if(trees[i].position.z < -100) {
             treesCF[i] = new THREE.Matrix4();
-            let t = Math.floor(Math.random() * (1000 - 500)+ 500);
-            if (i % 2 == 0) {
-                t = t * -1;
-            }
             treesCF[i].multiply(new THREE.Matrix4().makeTranslation(t,0,10000-i*100));
         }
         treesCF[i].multiply(new THREE.Matrix4().makeTranslation(0,0,TREESPEED));
@@ -108,9 +137,18 @@ function animate() {
             grounds[i].quaternion.copy(groundRot);
             grounds[i].scale.copy(groundScale);
         }
+        if (i >= 0 && i < NUMBOARDS) {
+            if (boards[i].position.z < -5000) {
+                boardsCF[i] = new THREE.Matrix4();
+                boardsCF[i].multiply(new THREE.Matrix4().makeTranslation(t,0,10000-i*100));
+            }
+            boardsCF[i].multiply(new THREE.Matrix4().makeTranslation(0,0,TREESPEED));
+            boardsCF[i].decompose(boardTrans, boardRot, boardScale);
+            boards[i].position.copy(boardTrans);
+            boards[i].quaternion.copy(boardRot);
+            boards[i].scale.copy(boardScale);
+        }
     }
-    //mesh.rotation.x += 0.01;
-    //mesh.rotation.y += 0.02;
     renderer.render( scene, camera );
 }
 
@@ -132,6 +170,24 @@ function onMouseMove(ev) {
     mouse[0] = -ev.clientX / -window.innerWidth;
     mouse[1] = -ev.clientY / -window.innerHeight;
 }
+
+function onDocumentMouseDown( event ) {
+    event.preventDefault();
+
+    dagger = new Target();
+
+    daggerCF = new THREE.Matrix4();
+    daggerCF.multiply(new THREE.Matrix4().makeTranslation(Math.sin(.5 * Math.PI * (event.clientX - .5))*window.innerWidth, Math.sin(.5 * Math.PI * (event.clientY - .5))*window.innerHeight, 1000));
+    daggerCF.decompose(daggerTrans, daggerRot, daggerScale);
+    dagger.position.copy(daggerTrans);
+    dagger.quaternion.copy(daggerRot);
+    dagger.scale.copy(daggerScale);
+
+    scene.add(dagger);
+
+}
+
+
 
 function onKeypress(event) {
     const key = event.keyCode || event.charCode;
