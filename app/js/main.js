@@ -18,7 +18,9 @@ var daggerCF;
 var isDagger;
 var daggerX, daggerY, daggerZ, daggerDir;
 var t;
-
+var collideCFs = [];
+var text2 = document.createElement('div');
+var points = 0;
 const TREESPEED = -25;
 const NUMTREES = 20;
 var NUMBOARDS = 4;
@@ -41,6 +43,16 @@ function init() {
     camera.position = new THREE.Vector3(0, 0, 0);
     camera.target = target;
     isDagger = false;
+
+    text2.style.position = 'absolute';
+//text2.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
+    text2.style.width = 100;
+    text2.style.height = 100;
+    text2.style.backgroundColor = "White";
+    text2.innerHTML = points;
+    text2.style.top = 200 + 'px';
+    text2.style.left = 200 + 'px';
+    document.body.appendChild(text2);
 
     for(i = 0; i < NUMTREES; i++) {
         let temp = new Tree();
@@ -101,6 +113,7 @@ function init() {
         boardCF.multiply(new THREE.Matrix4().makeTranslation(t,0,3333*(i+1)));
         boards.push(board);
         boardsCF.push(boardCF);
+        //collideCFs.push(boardCF);
         scene.add(board);
     }
 
@@ -112,7 +125,7 @@ function init() {
 
 function animate() {
     requestAnimationFrame( animate );
-
+    text2.innerHTML = points;
     camera.target.x = Math.sin(.5 * Math.PI * (mouse[0] - .5));
     camera.target.y = Math.sin(.25 * Math.PI * (mouse[1] - .5));
     camera.target.z = Math.cos(.5 * Math.PI * (mouse[0] - .5));
@@ -159,6 +172,23 @@ function animate() {
         if(t > 1000) {
             scene.remove(dagger);
             isDagger = false;
+        }
+        // if(dagger.position.y > 1500 || dagger.position.y < -1500) {
+        //     isDagger = false;
+        //     scene.remove(dagger);
+        // }
+        // if(dagger.position.z < -300 || dagger.position.z > 300) {
+        //     isDagger = false;
+        //     scene.remove(dagger);
+        // }
+        for(i = 0; i < NUMBOARDS; i++) {
+            if (Math.abs(boards[i].position.x-dagger.position.x) < 200 &&
+                Math.abs(boards[i].position.y-dagger.position.y) < 200 &&
+                Math.abs(boards[i].position.z-dagger.position.z) < 100) {
+                scene.remove(dagger);
+                isDagger = false;
+                points+=100;
+            }
         }
         var newDaggerX, newDaggerY, newDaggerZ;
         newDaggerX = t*daggerDir.x*10;
@@ -241,24 +271,5 @@ function onKeypress(event) {
             scene.updateMatrixWorld(true);
             break;
         }
-        case 73: { /* i */
-            //frameCF.multiply(moveZpos);
-            /* travel distance: 50, wheel radius 158 */
-            const angle = 50 / 150;
-            treeCF.multiply (new THREE.Matrix4().makeRotationZ (angle));
-            break;
-        }
-        case 74:  /* j */
-            treeCF.multiply(rotYpos);
-            break;
-        case 75:  /* k */
-            //frameCF.multiply(moveZneg);
-            // const angle = 50 / 158;
-            // treeCF.multiply (new THREE.Matrix4().makeRotationZ (-angle));
-            treeCF.multiply(new THREE.Matrix4().makeTranslation (0,0,10));
-            break;
-        case 76:  /* j */
-            treeCF.multiply(rotYneg);
-            break;
     }
 }
