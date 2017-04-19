@@ -15,6 +15,9 @@ var boards = [];
 var boardsCF = [];
 var dagger;
 var daggerCF;
+var isDagger;
+var daggerX, daggerY, daggerZ, daggerDir;
+var t;
 
 const TREESPEED = -25;
 const NUMTREES = 20;
@@ -37,6 +40,7 @@ function init() {
     camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
     camera.position = new THREE.Vector3(0, 0, 0);
     camera.target = target;
+    isDagger = false;
 
     for(i = 0; i < NUMTREES; i++) {
         let temp = new Tree();
@@ -84,6 +88,8 @@ function init() {
     daggerTrans = new THREE.Vector3();
     daggerRot = new THREE.Quaternion();
     daggerScale = new THREE.Vector3();
+
+
 
     for(i = 0; i < NUMBOARDS; i++) {
         var board = new Target();
@@ -149,6 +155,20 @@ function animate() {
             boards[i].scale.copy(boardScale);
         }
     }
+    if (isDagger) {
+        if(t > 1000) {
+            scene.remove(dagger);
+            isDagger = false;
+        }
+        var newDaggerX, newDaggerY, newDaggerZ;
+        newDaggerX = t*daggerDir.x*10;
+        newDaggerY = t*daggerDir.y*10;
+        newDaggerZ = t*daggerDir.z*10;
+        dagger.position.x = newDaggerX;
+        dagger.position.y = newDaggerY;
+        dagger.position.z = newDaggerZ;
+        t+=10;
+    }
     renderer.render( scene, camera );
 }
 
@@ -169,25 +189,30 @@ const rotYneg = new THREE.Matrix4().makeRotationY (THREE.Math.degToRad(-5));
 function onMouseMove(ev) {
     mouse[0] = -ev.clientX / -window.innerWidth;
     mouse[1] = -ev.clientY / -window.innerHeight;
+
 }
 
 function onDocumentMouseDown( event ) {
     event.preventDefault();
 
+    if(isDagger)
+        return;
+    isDagger = true;
     dagger = new Target();
-
+    t = 0;
     daggerCF = new THREE.Matrix4();
-    daggerCF.multiply(new THREE.Matrix4().makeTranslation(Math.sin(.5 * Math.PI * (event.clientX - .5))*window.innerWidth, Math.sin(.5 * Math.PI * (event.clientY - .5))*window.innerHeight, 1000));
+    daggerX = event.clientX - window.innerWidth/2;
+    daggerY = event.clientY - window.innerHeight/2;
+    daggerZ = 1000;
+    daggerDir = new THREE.Vector3(daggerX, daggerY, daggerZ).normalize();
+    daggerCF.multiply(new THREE.Matrix4().makeTranslation(daggerX, daggerY, daggerZ));
     daggerCF.decompose(daggerTrans, daggerRot, daggerScale);
     dagger.position.copy(daggerTrans);
     dagger.quaternion.copy(daggerRot);
     dagger.scale.copy(daggerScale);
-
     scene.add(dagger);
 
 }
-
-
 
 function onKeypress(event) {
     const key = event.keyCode || event.charCode;
