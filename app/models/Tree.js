@@ -4,6 +4,7 @@
  */
 class Tree {
     constructor(){
+        var loader = new THREE.TextureLoader();
         const TREE_TOP_RADIUS  = 70;
         const TREE_BOTTOM_RADIUS  = 100;
         const TREE_HEIGHT = 600;
@@ -13,13 +14,13 @@ class Tree {
         const LEAVES2_RADUIS = 200;
         //const barkMat =  new THREE.MeshPhongMaterial( { map: THREE.ImageUtils.loadTexture('Images/bark.jpg') } );
         //const leaves3Mat =  new THREE.MeshPhongMaterial( { map: THREE.ImageUtils.loadTexture('Images/leaves6.jpg') });
-        const leavesTex = new THREE.ImageUtils.loadTexture("Images/leaves12.jpg");
+        const leavesTex = loader.load("Images/leaves12.jpg");
         leavesTex.repeat.set(3.8,6);
         leavesTex.wrapS = THREE.RepeatWrapping;
         leavesTex.wrapT = THREE.RepeatWrapping;
         const leaves3Mat = new THREE.MeshPhongMaterial({ map: leavesTex});
 
-        const barkTex = new THREE.ImageUtils.loadTexture("Images/bark2.jpg");
+        const barkTex = loader.load("Images/bark2.jpg");
         barkTex.repeat.set(2,2);
         barkTex.wrapS = THREE.RepeatWrapping;
         barkTex.wrapT = THREE.RepeatWrapping;
